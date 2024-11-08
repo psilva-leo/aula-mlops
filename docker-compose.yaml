@@ -1,0 +1,45 @@
+services:
+#  prometheus:
+#    image: prom/prometheus:latest
+#    volumes:
+#      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+#    ports:
+#      - "9090:9090"
+#    networks:
+#      - monitoring
+##    depends_on:
+##      - app
+#
+#  # user admin
+#  # password admin
+#  grafana:
+#    image: grafana/grafana:latest
+#    ports:
+#      - "3000:3000"
+#    environment:
+#      - GF_SECURITY_ADMIN_PASSWORD=admin
+#    networks:
+#      - monitoring
+#    depends_on:
+#      - prometheus
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    command: mlflow server --host 0.0.0.0 --port 5000
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - ARTIFACT_STORE=/mlflow/artifacts
+    volumes:
+      - ./mlflow_artifacts:/mlflow/artifacts
+    ports:
+      - "5001:5000"
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+
+volumes:
+  grafana-data:
+  mysql_data:
+  mlflow_artifacts:

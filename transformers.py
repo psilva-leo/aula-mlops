@@ -16,5 +16,5 @@ class LabelEncoderTransformer(BaseEstimator, TransformerMixin):
     def transform(self, X):
         X_transformed = X.copy()
         for col, le in self.transformers.items():
-            X_transformed.loc[:,col] = le.transform(X_transformed[col].astype(str))
+            X_transformed.loc[:, col] = le.transform(X_transformed[col].astype(str))
         return X_transformed
