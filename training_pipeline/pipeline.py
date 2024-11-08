@@ -1,9 +1,7 @@
-import pickle
-
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.ensemble import RandomForestRegressor
@@ -14,6 +12,7 @@ import os
 
 from transformers import LabelEncoderTransformer
 import mlflow
+from mlflow.models import infer_signature
 
 experiment_name = "house_pricing"
 
@@ -56,9 +55,11 @@ def _apply_numerical_transformer(X, X_train, X_test):
     )
     X_test[numeric_features] = numeric_transformer.transform(X_test[numeric_features])
 
-    file_name = "numeric_transformer.pkl"
-    pickle.dump(numeric_transformer, open(file_name, "wb"))
-    mlflow.log_artifact(local_path=file_name, artifact_path=file_name)
+    signature = infer_signature(X_train)
+    model_log = mlflow.sklearn.log_model(
+        numeric_transformer, artifact_path="numerical_transformer", signature=signature
+    )
+    mlflow.register_model(model_log.model_uri, name="house_pricing_numerical_transformer")
 
     return X_train, X_test
 
@@ -78,9 +79,15 @@ def _apply_categorical_transformer(X, X_train, X_test):
         X_test[categorical_features]
     )
 
-    file_name = "categorical_transformer.pkl"
-    pickle.dump(categorical_transformer, open(file_name, "wb"))
-    mlflow.log_artifact(local_path=file_name, artifact_path=file_name)
+    signature = infer_signature(X_train)
+    model_log = mlflow.sklearn.log_model(
+        categorical_transformer,
+        artifact_path="categorical_transformer",
+        signature=signature,
+    )
+    mlflow.register_model(
+        model_log.model_uri, name="house_pricing_categorical_transformer"
+    )
 
     return X_train, X_test
 
@@ -135,10 +142,11 @@ def train_model(X_train, X_test, y_train, y_test):
     mlflow.log_metric("r2", r2)
     mlflow.log_params(model.get_params())
 
-    from mlflow.models import infer_signature
-
     signature = infer_signature(X_train)
-    mlflow.sklearn.log_model(model, artifact_path="model", signature=signature)
+    model_log = mlflow.sklearn.log_model(
+        model, artifact_path="model", signature=signature
+    )
+    mlflow.register_model(model_log.model_uri, name="house_pricing_model")
 
     return final_score
 
