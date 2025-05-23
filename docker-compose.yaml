@@ -25,6 +25,8 @@ services:
 
   app:
     image: mlops-app:0.1.0
+    build:
+      context: .
     environment:
       MLFLOW_URI: http://mlflow:5000
     ports:
